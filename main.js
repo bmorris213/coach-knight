@@ -61,7 +61,21 @@ function main() {
 
 //helper function to show command usage
 function printHelpScript() {
-
+    console.log('Usage for Coach Knight chess bot');
+    console.log('================================');
+    console.log('default use: npm start');
+    console.log('\tIf the user is \"logged in\", this launches default operation of program.');
+    console.log('Program reads data from user\'s website and compiles reports for you to use.');
+    console.log('Here users can \"download\" to download all games from their website,');
+    console.log('use \"report\" to generate reports on user games, or \"view\" to view these reports,');
+    console.log('or finally use \"quit\" to gracefully exit program.');
+    console.log('--------------------------------');
+    console.log('To specify optional arguments use: npm start -- [enter option here]');
+    console.log('\tOptions are as follows:');
+    console.log('-h or --help\t\tList program usage text.');
+    console.log('-l or --login\t\tlog user into a website for analysis.');
+    console.log('-r or --remove\tRemove the current login information and game data.');
+    console.log('--------------------------------');
 }
 
 //helper function to either 1.) establish a new user
