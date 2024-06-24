@@ -95,25 +95,59 @@ function printHelpScript() {
     console.log('--------------------------------');
 }
 
+//helper function to get domain name only
+function stripURL(urlString) {
+    let copyString = urlString;
+
+    if (copyString.includes('https://')) {
+        copyString = copyString.replace(/https:\/\//, '');
+    }
+    else if (copyString.includes('http://')) {
+        copyString = copyString.replace(/http:\/\//, '');
+    }
+
+    if (copyString.includes('www.')) {
+        copyString = copyString.replace(/www./, '');
+    }
+
+    if (copyString.endsWith('/')) {
+        copyString = copyString.slice(0, -1);
+    }
+
+    if (copyString.endsWith('.com')) {
+        copyString = copyString.replace(/.com/, '');
+    } else if (copyString.endsWith('.net')) {
+        copyString = copyString.replace(/.net/, '');
+    } else if (copyString.endsWith('.org')) {
+        copyString = copyString.replace(/.org/, '');
+    }
+
+    return copyString;
+}
+
 //helper function to either 1.) establish a new user
 //or 2.) switch active user to an already established user
 async function logInUser() {
-    const webSitesSupported = [ "chess.com", "lichess" ];
+    const webSitesSupported = [ "chess", "lichess" ]; //stripped versions
+    // unstripped would be https://www.chess.com/ and https://www.lichess.org/
 
     try {
         let preferredSite = ''
         while (!webSitesSupported.includes(preferredSite)) {
             preferredSite = await askQuestion('Which site do you want to use?\n');
+            
+            preferredSite = stripURL(preferredSite);
 
             if (!webSitesSupported.includes(preferredSite)) {
                 console.log(`Coach Knight chess bot does not support the website \"${preferredSite}\"`);
+                console.log(`Current supported sites: ${webSitesSupported}`);
             }
         }
         
         const username = await askQuestion('Enter your chess username:\n');
         const password = await askQuestion('Enter your password:\n');
 
-        console.log(`Loggin in as ${username} ${password}`);
+        console.log(`Logging in as ${username} ${password}`);
     } catch (err) {
         console.log(err);
     }
@@ -128,7 +162,31 @@ async function removeCurrent() {
 //  download games from site
 //  read general or specific reports
 async function handleUserInteraction() {
-    console.log('Hello World');
+    while(true) {
+        const userCommand = await askQuestion('Type a command for Coach Knight chess bot:\n > ');
+
+        if (userCommand === 'quit') {
+            console.log('Thank you for using Coach Knight chess bot! Have a nice day!');
+            process.exit();
+        } else if (userCommand === 'download') {
+            console.log('Downloading games...');
+        } else if (userCommand === 'report') {
+            console.log('Generating reports...');
+        } else if (userCommand === 'view') {
+            console.log('Viewing reports...');
+        } else if (userCommand === 'help') {
+            console.log('Type \"quit\" to exit the program.');
+            console.log('Type \"help\" to see this menu.');
+            console.log('Type \"download\" to download your games.');
+            console.log('Type \"report\" to generate reports for downloaded games.');
+            console.log('Type \"view\" to view generated reports.');
+        } else {
+            console.log(`Command of \"${userCommand}\" is not a valid command.`);
+            console.log('Try \"help\" to see valid commands.');
+        }
+
+        console.log('--------------------------------');
+    }
 }
 
 export { parseStartup, closeInterface };
