@@ -18,7 +18,7 @@ async function main() {
     if (!isApiKeyStored()) {
         storeEncryptedApiKey(apiKey);
     }
-
+    
     //redirect to terminal interaction
     await parseStartup();
 
