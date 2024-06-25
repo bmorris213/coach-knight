@@ -43,6 +43,9 @@ async function parseStartup() {
     if (userCommands.length === 0) {
         if (getCurrentUser() === null) {
             console.log('Must log in before accessing default function');
+            console.log('Run \"npm run help\" for more information.');
+            console.log('Run \"npm run login\" to log in.');
+            console.log('Run \"npm run logout\" to log out again.');
             return 1;
         }
 
@@ -63,6 +66,9 @@ async function parseStartup() {
         return 0;
     } else if (command === 'login' || command === 'l') {
         await logInUser();
+        return 0;
+    } else if (command === 'logout' || command === 'o') {
+        logOutUser();
         return 0;
     } else if (command === 'remove' || command === 'r') {
         if (getCurrentUser() === null) {
@@ -95,7 +101,12 @@ function printHelpScript() {
     console.log('h or help\t\tList program usage text.');
     console.log('l or login\t\tlog user into a website for analysis.');
     console.log('r or remove\tRemove the current login information and game data.');
+    console.log('o or logout\tLogs user out of coach knight.');
     console.log('--------------------------------');
+    console.log('Additional scripts, use: npm run [script]');
+    console.log('help:\tprint out this message');
+    console.log('login:\tlog into coach knight');
+    console.log('logout:\tlog out of coach knight');
 }
 
 //helper function to get domain name only
@@ -149,8 +160,6 @@ async function handleUserInteraction() {
         const userCommand = await askQuestion('Type a command for Coach Knight chess bot:\n > ');
 
         if (userCommand === 'quit') {
-            console.log('Logging out...');
-            logOutUser();
             console.log('Thank you for using Coach Knight chess bot! Have a nice day!');
             process.exit();
         } else if (userCommand === 'download') {
@@ -220,4 +229,4 @@ async function downloadGames() {
     storeGameData(username, gameData);
 }
 
-export { parseStartup, closeInterface };
+export { parseStartup, closeInterface, printHelpScript, logInUser };

@@ -6,6 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node main.js",
+    "help": "node help.js",
+    "login": "node login.js",
+    "logout": "node logout.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
   },
   "jest": {

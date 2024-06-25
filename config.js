@@ -50,18 +50,12 @@ dotenv.config();
 
 //function to update environment file
 function updateEnv() {
-    const logged_user = process.env.LOGGED_USER ? JSON.stringify(process.env.LOGGED_USER) : JSON.stringify(false);
-    const players = process.env.PLAYERS ? JSON.stringify(process.env.PLAYERS) : JSON.stringify([]);
-    const passwords = process.env.PASSWORDS ? JSON.stringify(process.env.PASSWORDS) : JSON.stringify({});
-    const data = process.env.GAME_DATA ? JSON.stringify(process.env.GAME_DATA) : JSON.stringify({});
-    const api = process.env.CHESS_API_KEY ? JSON.stringify(process.env.CHESS_API_KEY) : JSON.stringify('');
-
     const updatedEnv = `
-LOGGED_USER=${logged_user}
-PLAYERS=${players}
-PASSWORDS=${passwords}
-GAME_DATA=${data}
-CHESS_API_KEY=${api}
+LOGGED_USER=${process.env.LOGGED_USER}
+PLAYERS=${process.env.PLAYERS}
+PASSWORDS=${process.env.PASSWORDS}
+GAME_DATA=${process.env.GAME_DATA}
+CHESS_API_KEY=${process.env.CHESS_API_KEY}
 `;
     fs.writeFileSync('.env', updatedEnv.trim(), 'utf-8');
 }
@@ -79,6 +73,7 @@ function storeEncryptedApiKey (apiKey) {
 
     if (!process.env.CHESS_API_KEY) {
         fs.appendFileSync('.env', `\nCHESS_API_KEY=${encryptedApiKey}`);
+        process.env.CHESS_API_KEY = encryptedApiKey;
     } else {
         process.env.CHESS_API_KEY = encryptedApiKey;
         updateEnv();
@@ -86,8 +81,9 @@ function storeEncryptedApiKey (apiKey) {
 }
 
 function logOutUser () {
-    process.env.LOGGED_USER = JSON.stringify(false);
+    process.env.LOGGED_USER = JSON.stringify('');
     updateEnv();
+    console.log('Successfully logged out.');
 }
 
 function authorizeUser (username, password) {
@@ -103,24 +99,20 @@ function authorizeUser (username, password) {
             passwords[username] = encrypt(password);
         } else {
             //all we need to do is verify password
-            if (encrypt(password) !== passwords[username]) {
+            if (password !== decrypt(passwords[username])) {
                 throw new Error('Password does not match...');
             }
         }
         
         //finally set new LOGGED_USER variable
-        if (!process.env.LOGGED_USER) {
-            fs.appendFileSync('.env', `\nLOGGED_USER=${username}`);
-        } else {
-            process.env.LOGGED_USER = username;
-        }
+        process.env.LOGGED_USER = username;
 
         //download changes
         process.env.PLAYERS = JSON.stringify(players);
         process.env.PASSWORDS = JSON.stringify(passwords);
         updateEnv();
     } catch (err) {
-        console.log(`Log in error:\n${err}`);
+        console.log(`Failed to log in:\n${err}`);
     }
 }
 
@@ -155,7 +147,7 @@ function deleteUser() {
 }
 
 function getCurrentUser() {
-    return process.env.LOGGED_USER ? process.env.LOGGED_USER : null;
+    return !!process.env.LOGGED_USER ? process.env.LOGGED_USER : null;
 }
 
 function storeGameData(username, data) {
