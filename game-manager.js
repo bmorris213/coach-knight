@@ -9,12 +9,7 @@
 //Can delete all of a user's downloaded games
 
 async function getUserGames(url, username) {
-    return {
-        test: 'empty data object',
-        test1: 1,
-        test2: 'used for testing object usage',
-        url, username
-    };
+    
 }
 
 export { getUserGames };

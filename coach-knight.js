@@ -162,28 +162,23 @@ async function handleUserInteraction() {
 };
 
 async function downloadGames() {
-    const supportedSites = [ 'https://www.chess.com/', 'https://www.lichess.org/' ];
-    const strippedSites = supportedSites.map(stripURL);
+    const supportedSites = {
+        chess: 'https://www.chess.com/',
+        lichess: 'https://www.lichess.org/' };
     const username = getValue('LOGGED_PLAYER');
     let website = '';
 
     //get a supported site from user
-    while (!strippedSites.includes(stripURL(website))) {
+    while (!(stripURL(website) in Object.keys(supportedSites))) {
         website = await getInput('From which website should I look for your games?');
 
-        if (!strippedSites.includes(stripURL(website))) {
+        if (!(stripURL(website) in Object.keys(supportedSites))) {
             await putText(`Coach Knight does not support the website \"${website}\"...`);
-            await putText(`Supported sites: ${supportedSites}`);
+            await putText(`Supported sites: ${Object.keys(supportedSites)}`);
         };
     };
 
-    //ensure url is of standard type
-    let url = '';
-    for (const site of supportedSites) {
-        if (stripURL(site) === stripURL(website)) {
-            url = site;
-        }
-    };
+    const url = supportedSites[stripURL(website)];
 
     if (!url) {
         throw new Error(`Supported site of \"${website}\" not actually supported!`);
