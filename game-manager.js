@@ -8,7 +8,7 @@
 //Stores the 'Key Moments' from every game that it finds for later use
 //Can delete all of a user's downloaded games
 
-async function getGameData(url, username) {
+async function getUserGames(url, username) {
     return {
         test: 'empty data object',
         test1: 1,
@@ -17,4 +17,4 @@ async function getGameData(url, username) {
     };
 }
 
-export { getGameData };
+export { getUserGames };
