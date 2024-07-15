@@ -1,6 +1,6 @@
 //Coach Knight
 //Brian Morris
-//06-30-2024
+//07-15-2024
 
 //Coach Knight
 //
@@ -10,11 +10,11 @@
 // Not including 'secure.js' in git enforces security of program when ported
 // HOWEVER
 // Because it isn't included, package requires you implement 'secure.js' yourself
-import { encrypt, decrypt } from './secure.js';
+import { encrypt, decrypt, getApiKey } from './secure.js';
 
 import { updateEnv, getValue } from './config.js';
 import { getInput, putText, callIsValid, closeInterface } from './terminal.js';
-import { getUserGames } from './game-manager.js';
+import { getUserGames, getUserURLs } from './game-manager.js';
 import { generateReport } from './reports.js';
 
 //define 'help' text
@@ -162,37 +162,23 @@ async function handleUserInteraction() {
 };
 
 async function downloadGames() {
-    const supportedSites = {
-        chess: 'https://www.chess.com/',
-        lichess: 'https://www.lichess.org/' };
     const username = getValue('LOGGED_PLAYER');
-    let website = '';
 
-    //get a supported site from user
-    while (!(stripURL(website) in Object.keys(supportedSites))) {
-        website = await getInput('From which website should I look for your games?');
-
-        if (!(stripURL(website) in Object.keys(supportedSites))) {
-            await putText(`Coach Knight does not support the website \"${website}\"...`);
-            await putText(`Supported sites: ${Object.keys(supportedSites)}`);
-        };
-    };
-
-    const url = supportedSites[stripURL(website)];
-
-    if (!url) {
-        throw new Error(`Supported site of \"${website}\" not actually supported!`);
-    };
-
-    //try retrieval of game data for current logged user
-    const newData = await getUserGames(url, username);
-
-    //ensure retrieval was successful
-    if (!newData) {
-        await putText(`Could not retrive data from \"${website}\" for you, \"${username}\"...`);
-        await putText('Perhaps your account is under a different username for that website?');
+    if (!username) {
+        await putText('No user logged in!');
         return;
     };
+
+    //ensure we have api key
+    if (!getValue('CHESS_API_KEY')) {
+        updateEnv ({
+            CHESS_API_KEY: getApiKey()
+        });
+    }
+    const apiKey = decrypt(getValue('CHESS_API_KEY'));
+
+    //get reference to all of a user's games
+    const userURLs = getUserURLs(username, apiKey);
 
     //update environment variable for game data
     let gameData = getValue('GAME_DATA');
@@ -202,7 +188,7 @@ async function downloadGames() {
 
     const currentData = gameData[username] || {};
 
-    gameData[username] = {...currentData, ...newData};
+    gameData[username] = {...currentData, ...userURLs};
 
     updateEnv({
         GAME_DATA: gameData
@@ -217,12 +203,48 @@ async function viewGames() {
     const username = getValue('LOGGED_PLAYER');
     const gameData = getValue('GAME_DATA');
     if (!gameData || !username || !gameData.hasOwnProperty(username)) {
-        await putText('There is no data to view!');
+        await putText('There is no data to view! Try \"download\" to get some game data.');
         return;
     };
 
+    //ensure we have api key
+    if (!getValue('CHESS_API_KEY')) {
+        updateEnv ({
+            CHESS_API_KEY: getApiKey()
+        });
+    }
+    const apiKey = decrypt(getValue('CHESS_API_KEY'));
+
+    //begin loop of analyzing a few games at a time
+    let userResponse = '';
+    const analysis = [];
+    const bufferNumber = 10;
+    const gameURLs = gameData[username];
+    
+    await putText(`Analyzing ${bufferNumber} games at a time...`);
+    await putText('To stop, just type something and hit enter. Hitting enter without typing anything will keep going until done.');
+    
+    while (!userResponse) {
+        userResponse = await getInput();
+
+        if (!userResponse) {
+            //get the BUFFER NUMBER next games
+            const newData = await getUserGames(gameURLs, apiKey, bufferNumber, username);
+
+            if (typeof newData === 'Error') {
+                await putText(newData);
+                return;
+            } else if (!newData) {
+                await putText(`Could not retrive data for you, \"${username}\"...`);
+                return;
+            };
+
+            analysis = {...analysis, ...newData};
+        };
+    };
+
     //compile report
-    const report = generateReport(gameData[username]);
+    const report = generateReport(analysis);
 
     //display report
     await putText(report);
@@ -316,15 +338,6 @@ function stripURL(urlString) {
     //strip root path
     if (urlString.endsWith('/')) {
         urlString = urlString.slice(0, -1);
-    }
-
-    //strip domain types
-    if (urlString.endsWith('.com')) {
-        urlString = urlString.replace(/\.com/, '');
-    } else if (urlString.endsWith('.net')) {
-        urlString = urlString.replace(/\.net/, '');
-    } else if (urlString.endsWith('.org')) {
-        urlString = urlString.replace(/\.org/, '');
     }
 
     return urlString;
